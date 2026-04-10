@@ -120,7 +120,7 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at):
     rows_html = ""
     for d in all_data:
         pct = d["total_sold"] / d["total_sellable"] * 100 if d["total_sellable"] > 0 else 0
-        bar_color = "#e74c3c" if pct >= 80 else "#f39c12" if pct >= 50 else "#2ecc71"
+        bar_color = "#c0392b" if pct >= 80 else "#e67e22" if pct >= 50 else "#2e86de"
 
         types_detail = ""
         for t in d["types"]:
@@ -168,38 +168,47 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{event_name} - Seat Report</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0f0f1a;
-            color: #e0e0e0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(180deg, #e8f4f8 0%, #f5f0eb 100%);
+            color: #2c3e50;
             min-height: 100vh;
             padding: 20px;
         }}
         .container {{ max-width: 800px; margin: 0 auto; }}
         .header {{
             text-align: center;
-            padding: 30px 0 20px;
+            padding: 35px 0 10px;
         }}
         .header h1 {{
-            font-size: 2.2em;
-            color: #fff;
-            margin-bottom: 5px;
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 2.8em;
+            font-weight: 900;
+            color: #1a3c5e;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
         }}
         .header .subtitle {{
-            color: #888;
+            color: #7f8c8d;
             font-size: 0.95em;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }}
         .summary {{
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            border-radius: 16px;
-            padding: 25px;
-            margin: 20px 0 30px;
+            background: linear-gradient(135deg, #1a3c5e, #2e86de);
+            border-radius: 18px;
+            padding: 28px;
+            margin: 24px 0 30px;
             display: flex;
             justify-content: space-around;
             align-items: center;
-            border: 1px solid #2a2a4a;
+            box-shadow: 0 8px 30px rgba(26, 60, 94, 0.25);
         }}
         .summary-item {{ text-align: center; }}
         .summary-item .big {{
@@ -207,53 +216,56 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at):
             font-weight: 700;
             color: #fff;
         }}
-        .summary-item .big.pct {{ color: {("#e74c3c" if grand_pct >= 80 else "#f39c12" if grand_pct >= 50 else "#2ecc71")}; }}
+        .summary-item .big.pct {{ color: {("#ffb8b8" if grand_pct >= 80 else "#ffd9a0" if grand_pct >= 50 else "#a0e4ff")}; }}
         .summary-item .label {{
-            font-size: 0.85em;
-            color: #888;
+            font-size: 0.8em;
+            color: rgba(255,255,255,0.7);
             margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }}
         .grand-bar {{
             height: 8px;
-            background: #2a2a4a;
+            background: rgba(255,255,255,0.2);
             border-radius: 4px;
-            margin: 15px 0 0;
+            margin: 18px 0 0;
             overflow: hidden;
         }}
         .grand-bar-fill {{
             height: 100%;
             border-radius: 4px;
-            background: {("#e74c3c" if grand_pct >= 80 else "#f39c12" if grand_pct >= 50 else "#2ecc71")};
+            background: {("#c0392b" if grand_pct >= 80 else "#e67e22" if grand_pct >= 50 else "#a0e4ff")};
             width: {grand_pct}%;
             transition: width 0.5s;
         }}
         .cards {{ display: flex; flex-direction: column; gap: 14px; }}
         .card {{
-            background: #1a1a2e;
-            border-radius: 12px;
-            padding: 18px 20px;
-            border: 1px solid #2a2a4a;
-            transition: transform 0.15s;
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 20px 22px;
+            border: 1px solid #d5e8f0;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }}
-        .card:hover {{ transform: translateY(-2px); border-color: #3a3a5a; }}
+        .card:hover {{ transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26, 60, 94, 0.1); }}
         .card-header {{
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
         }}
-        .card-date {{ font-size: 1.1em; font-weight: 600; color: #fff; }}
-        .card-pct {{ font-size: 1.4em; font-weight: 700; }}
+        .card-date {{ font-size: 1.1em; font-weight: 600; color: #1a3c5e; }}
+        .card-pct {{ font-size: 1.4em; font-weight: 700; color: #1a3c5e; }}
         .progress-bar {{
-            height: 6px;
-            background: #2a2a4a;
-            border-radius: 3px;
+            height: 7px;
+            background: #e8f4f8;
+            border-radius: 4px;
             overflow: hidden;
             margin-bottom: 14px;
         }}
         .progress-fill {{
             height: 100%;
-            border-radius: 3px;
+            border-radius: 4px;
             transition: width 0.5s;
         }}
         .card-stats {{
@@ -262,10 +274,10 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at):
             margin-bottom: 10px;
         }}
         .stat {{ text-align: center; }}
-        .stat-num {{ font-size: 1.3em; font-weight: 600; color: #fff; }}
-        .stat-label {{ font-size: 0.75em; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .stat-num {{ font-size: 1.3em; font-weight: 700; color: #1a3c5e; }}
+        .stat-label {{ font-size: 0.72em; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }}
         .types-detail {{
-            border-top: 1px solid #2a2a4a;
+            border-top: 1px solid #e8f4f8;
             padding-top: 10px;
             margin-top: 4px;
         }}
@@ -276,12 +288,12 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at):
             padding: 4px 0;
             font-size: 0.85em;
         }}
-        .type-name {{ color: #aaa; min-width: 120px; }}
-        .type-stats {{ color: #ccc; flex: 1; text-align: center; }}
-        .type-avail {{ color: #888; min-width: 70px; text-align: right; }}
+        .type-name {{ color: #5a7a94; min-width: 120px; font-weight: 500; }}
+        .type-stats {{ color: #2c3e50; flex: 1; text-align: center; }}
+        .type-avail {{ color: #7f8c8d; min-width: 70px; text-align: right; }}
         .badge-waiting {{
-            background: #f39c12;
-            color: #000;
+            background: #ffeaa7;
+            color: #6d4c00;
             padding: 1px 6px;
             border-radius: 8px;
             font-size: 0.8em;
@@ -290,13 +302,13 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at):
         .footer {{
             text-align: center;
             padding: 30px 0 10px;
-            color: #555;
+            color: #95a5a6;
             font-size: 0.8em;
         }}
         @media (max-width: 500px) {{
             body {{ padding: 12px; }}
-            .header h1 {{ font-size: 1.6em; }}
-            .summary {{ flex-wrap: wrap; gap: 15px; padding: 18px; }}
+            .header h1 {{ font-size: 2em; }}
+            .summary {{ flex-wrap: wrap; gap: 15px; padding: 20px; }}
             .summary-item .big {{ font-size: 1.8em; }}
             .card {{ padding: 14px 16px; }}
         }}
