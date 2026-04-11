@@ -1,8 +1,11 @@
+import os
 import re
 import sys
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import requests
+
+HISTORY_FILE = "history.json"
 
 API_URL = "https://boletopolis.com/api/v4/rpc"
 URL_PATTERN = re.compile(r"/evento/(\d+)/funcion/(\d+)/")
@@ -113,14 +116,84 @@ def print_report(data):
         print(line)
 
 
-def generate_html(all_data, grand_sold, grand_sellable, updated_at):
+def load_history():
+    """Load history from JSON file. Returns list of snapshots."""
+    if not os.path.exists(HISTORY_FILE):
+        return []
+    try:
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, IOError):
+        return []
+
+
+def save_history(history, all_data, grand_sold):
+    """Append current snapshot and prune entries older than 48 hours."""
+    now = datetime.now(timezone.utc)
+    snapshot = {
+        "timestamp": now.isoformat(),
+        "grand_sold": grand_sold,
+        "per_function": {d["raw_date"]: d["total_sold"] for d in all_data},
+    }
+    history.append(snapshot)
+
+    # Keep only last 48 hours to prevent file from growing forever
+    cutoff = (now - timedelta(hours=48)).isoformat()
+    history = [h for h in history if h["timestamp"] >= cutoff]
+
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history, f)
+    return history
+
+
+def calc_sold_24h(history, all_data, grand_sold):
+    """Calculate tickets sold in the last 24 hours using history."""
+    if not history:
+        return None, {}
+
+    now = datetime.now(timezone.utc)
+    target = now - timedelta(hours=24)
+
+    # Find the snapshot closest to 24 hours ago
+    best = None
+    for h in history:
+        ts = datetime.fromisoformat(h["timestamp"])
+        if ts <= target:
+            best = h
+
+    if not best:
+        # All history is within 24h, use the oldest entry
+        best = history[0]
+
+    grand_diff = grand_sold - best.get("grand_sold", grand_sold)
+    per_function = {}
+    old_funcs = best.get("per_function", {})
+    for d in all_data:
+        key = d["raw_date"]
+        if key in old_funcs:
+            per_function[key] = d["total_sold"] - old_funcs[key]
+        else:
+            per_function[key] = None  # No historical data for this function
+
+    return max(0, grand_diff), per_function
+
+
+def generate_html(all_data, grand_sold, grand_sellable, updated_at, sold_24h=None, sold_24h_per_func=None):
     grand_pct = grand_sold / grand_sellable * 100 if grand_sellable > 0 else 0
     grand_available = grand_sellable - grand_sold
+
+    if sold_24h_per_func is None:
+        sold_24h_per_func = {}
 
     rows_html = ""
     for d in all_data:
         pct = d["total_sold"] / d["total_sellable"] * 100 if d["total_sellable"] > 0 else 0
         bar_color = "#c0392b" if pct >= 80 else "#e67e22" if pct >= 50 else "#2e86de"
+
+        func_24h = sold_24h_per_func.get(d["raw_date"])
+        badge_24h = ""
+        if func_24h is not None and func_24h > 0:
+            badge_24h = f'<span class="badge-24h">+{func_24h} today</span>'
 
         types_detail = ""
         for t in d["types"]:
@@ -136,7 +209,7 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at):
         rows_html += f"""
         <div class="card">
             <div class="card-header">
-                <div class="card-date">{d["date_short"]}</div>
+                <div class="card-date">{d["date_short"]} {badge_24h}</div>
                 <div class="card-pct">{pct:.0f}%</div>
             </div>
             <div class="progress-bar">
@@ -299,6 +372,16 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at):
             font-size: 0.8em;
             font-weight: 600;
         }}
+        .badge-24h {{
+            background: #d4efdf;
+            color: #1a6b3c;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 0.7em;
+            font-weight: 600;
+            margin-left: 8px;
+            vertical-align: middle;
+        }}
         .footer {{
             text-align: center;
             padding: 30px 0 10px;
@@ -337,6 +420,10 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at):
             <div class="summary-item">
                 <div class="big">{len(all_data)}</div>
                 <div class="label">Functions</div>
+            </div>
+            <div class="summary-item">
+                <div class="big">{f"+{sold_24h}" if sold_24h is not None else "--"}</div>
+                <div class="label">Last 24h</div>
             </div>
         </div>
         <div class="grand-bar"><div class="grand-bar-fill"></div></div>
@@ -414,8 +501,16 @@ def main():
     print(f"{'=' * 60}")
 
     if html_output and all_data:
+        # Load history, calculate 24h change, save new snapshot
+        history = load_history()
+        sold_24h, sold_24h_per_func = calc_sold_24h(history, all_data, grand_sold)
+        history = save_history(history, all_data, grand_sold)
+
+        if sold_24h is not None:
+            print(f"\n  Sold in last 24h: +{sold_24h}")
+
         updated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-        html = generate_html(all_data, grand_sold, grand_sellable, updated_at)
+        html = generate_html(all_data, grand_sold, grand_sellable, updated_at, sold_24h, sold_24h_per_func)
         with open(html_output, "w", encoding="utf-8") as f:
             f.write(html)
         print(f"\nHTML report saved to: {html_output}")

@@ -9,7 +9,7 @@ on:
     paths: [links.txt]
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -30,6 +30,14 @@ jobs:
       - run: pip install requests
 
       - run: python theatre.py --html index.html
+
+      - name: Save history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add history.json
+          git diff --cached --quiet || git commit -m "Update history.json"
+          git push
 
       - uses: actions/upload-pages-artifact@v3
         with:
