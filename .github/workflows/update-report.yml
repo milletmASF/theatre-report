@@ -3,6 +3,7 @@ name: Update Seat Report
 on:
   schedule:
     - cron: '*/30 * * * *'  # Every 30 minutes
+    - timezone: 'America/Mexico_City'
   workflow_dispatch: # Manual trigger
   push:
     branches: [main]
