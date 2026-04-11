@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python -m pip install requests)",
+      "Bash(python theatre.py)",
+      "Bash(python -m venv venv)",
+      "Bash(venv/Scripts/python.exe -m pip install requests)",
+      "Bash(venv/Scripts/python.exe theatre.py)",
+      "Bash(curl -s -I -X OPTIONS \"https://boletopolis.com/api/v4/rpc\" -H \"Origin: https://example.github.io\" -H \"Access-Control-Request-Method: POST\")",
+      "Bash(curl -s -D - -o /dev/null -X POST \"https://boletopolis.com/api/v4/rpc\" -H \"Origin: https://example.github.io\" -H \"Content-Type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"method\":\"evento.tipos_boletos_comprar\",\"params\":{\"id\":\"38961\",\"id_funcion\":\"261873\"},\"id\":1}')",
+      "Bash(curl -v -X POST \"https://boletopolis.com/api/v4/rpc\" -H \"Origin: https://example.github.io\" -H \"Content-Type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"method\":\"evento.tipos_boletos_comprar\",\"params\":{\"id\":\"38961\",\"id_funcion\":\"261873\"},\"id\":1}')",
+      "Bash(curl -s -w \"\\\\n%{http_code}\" -X POST \"https://boletopolis.com/api/v4/rpc\" -H \"Content-Type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"method\":\"evento.tipos_boletos_comprar\",\"params\":{\"id\":\"38961\",\"id_funcion\":\"261873\"},\"id\":1}')",
+      "Bash(venv/Scripts/python.exe theatre.py --html index.html)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(where gh:*)",
+      "WebFetch(domain:milletmasf.github.io)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}

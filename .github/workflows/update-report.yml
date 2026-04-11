@@ -2,7 +2,7 @@ name: Update Seat Report
 
 on:
   schedule:
-    - cron: '*/30 * * * *'  # Every 30 minutes
+    - cron: '*/10 * * * *'  # Every 10 minutes
   workflow_dispatch: # Manual trigger
   push:
     branches: [main]
