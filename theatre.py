@@ -185,10 +185,53 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at, sold_24h=Non
     if sold_24h_per_func is None:
         sold_24h_per_func = {}
 
-    rows_html = ""
+    now = datetime.now()
+    future_data = []
+    past_data = []
     for d in all_data:
+        try:
+            event_dt = datetime.strptime(d["raw_date"], "%Y-%m-%d %H:%M:%S")
+            is_past = event_dt < now
+        except (ValueError, TypeError):
+            is_past = False
+        (past_data if is_past else future_data).append(d)
+
+    past_total_sold = sum(d["total_sold"] for d in past_data)
+    past_total_available = sum(d["total_available"] for d in past_data)
+
+    past_header_html = ""
+    if past_data:
+        past_header_html = f"""
+        <div class="past-section-header">
+            <span class="past-section-title">Past Events</span>
+            <span class="past-section-totals">{past_total_sold} sold &nbsp;·&nbsp; {past_total_available} available</span>
+        </div>"""
+
+    rows_html = ""
+    past_injected = False
+    for d in future_data + past_data:
         pct = d["total_sold"] / d["total_sellable"] * 100 if d["total_sellable"] > 0 else 0
-        bar_color = "#c0392b" if pct >= 80 else "#e67e22" if pct >= 50 else "#2e86de"
+        is_past = d in past_data
+
+        if is_past:
+            if not past_injected:
+                rows_html += past_header_html
+                past_injected = True
+            rows_html += f"""
+        <div class="card card-past">
+            <div class="card-header">
+                <div class="card-date">{d["date_short"]}</div>
+                <div class="card-pct">{pct:.0f}%</div>
+            </div>
+            <div class="card-stats-past">
+                <span>{d["total_sold"]} sold</span>
+                <span>{d["total_available"]} available</span>
+                <span>{d["total_sellable"]} total</span>
+            </div>
+        </div>"""
+            continue
+
+        bar_color = "#c0392b" if pct >= 80 else "#e67e22" if pct >= 60 else "#f1c40f" if pct >= 40 else "#2e86de" if pct >= 20 else "#2ecc71"
 
         func_24h = sold_24h_per_func.get(d["raw_date"])
         badge_24h = ""
@@ -289,7 +332,7 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at, sold_24h=Non
             font-weight: 700;
             color: #fff;
         }}
-        .summary-item .big.pct {{ color: {("#ffb8b8" if grand_pct >= 80 else "#ffd9a0" if grand_pct >= 50 else "#a0e4ff")}; }}
+        .summary-item .big.pct {{ color: #f4a7b9; }}
         .summary-item .label {{
             font-size: 0.8em;
             color: rgba(255,255,255,0.7);
@@ -307,7 +350,7 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at, sold_24h=Non
         .grand-bar-fill {{
             height: 100%;
             border-radius: 4px;
-            background: {("#c0392b" if grand_pct >= 80 else "#e67e22" if grand_pct >= 50 else "#a0e4ff")};
+            background: {("#c0392b" if grand_pct >= 80 else "#e67e22" if grand_pct >= 60 else "#f1c40f" if grand_pct >= 40 else "#2e86de" if grand_pct >= 20 else "#2ecc71")};
             width: {grand_pct}%;
             transition: width 0.5s;
         }}
@@ -364,6 +407,41 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at, sold_24h=Non
         .type-name {{ color: #5a7a94; min-width: 120px; font-weight: 500; }}
         .type-stats {{ color: #2c3e50; flex: 1; text-align: center; }}
         .type-avail {{ color: #7f8c8d; min-width: 70px; text-align: right; }}
+        .past-section-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 4px 6px;
+            border-top: 1px solid #dde;
+            margin-top: 8px;
+        }}
+        .past-section-title {{
+            font-size: 0.75em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #aaa;
+        }}
+        .past-section-totals {{
+            font-size: 0.82em;
+            color: #aaa;
+            font-weight: 500;
+        }}
+        .card-past {{
+            background: #f4f4f4;
+            border-color: #e0e0e0;
+            box-shadow: none;
+        }}
+        .card-past:hover {{ transform: none; box-shadow: none; }}
+        .card-past .card-date {{ color: #999; font-weight: 500; }}
+        .card-past .card-pct {{ color: #aaa; font-size: 1.1em; }}
+        .card-stats-past {{
+            display: flex;
+            gap: 20px;
+            font-size: 0.85em;
+            color: #aaa;
+            margin-top: 2px;
+        }}
         .badge-waiting {{
             background: #ffeaa7;
             color: #6d4c00;
