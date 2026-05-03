@@ -340,20 +340,6 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at, sold_24h=Non
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }}
-        .grand-bar {{
-            height: 8px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 4px;
-            margin: 18px 0 0;
-            overflow: hidden;
-        }}
-        .grand-bar-fill {{
-            height: 100%;
-            border-radius: 4px;
-            background: {("#c0392b" if grand_pct >= 80 else "#e67e22" if grand_pct >= 60 else "#f1c40f" if grand_pct >= 40 else "#2e86de" if grand_pct >= 20 else "#2ecc71")};
-            width: {grand_pct}%;
-            transition: width 0.5s;
-        }}
         .cards {{ display: flex; flex-direction: column; gap: 14px; }}
         .card {{
             background: #ffffff;
@@ -504,7 +490,7 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at, sold_24h=Non
                 <div class="label">Last 24h</div>
             </div>
         </div>
-        <div class="grand-bar"><div class="grand-bar-fill"></div></div>
+
 
         <div class="cards">
             {rows_html}
