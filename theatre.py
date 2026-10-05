@@ -3,6 +3,7 @@ import re
 import sys
 import json
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 import requests
 
 HISTORY_FILE = "history.json"
@@ -573,7 +574,7 @@ def main():
         if sold_24h is not None:
             print(f"\n  Sold in last 24h: +{sold_24h}")
 
-        updated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        updated_at = datetime.now(ZoneInfo("America/Mexico_City")).strftime("%Y-%m-%d %H:%M CDMX")
         html = generate_html(all_data, grand_sold, grand_sellable, updated_at, sold_24h, sold_24h_per_func)
         with open(html_output, "w", encoding="utf-8") as f:
             f.write(html)
