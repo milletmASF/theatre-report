@@ -186,12 +186,13 @@ def generate_html(all_data, grand_sold, grand_sellable, updated_at, sold_24h=Non
     if sold_24h_per_func is None:
         sold_24h_per_func = {}
 
-    now = datetime.now()
+    cdmx = ZoneInfo("America/Mexico_City")
+    now = datetime.now(cdmx)
     future_data = []
     past_data = []
     for d in all_data:
         try:
-            event_dt = datetime.strptime(d["raw_date"], "%Y-%m-%d %H:%M:%S")
+            event_dt = datetime.strptime(d["raw_date"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=cdmx)
             is_past = event_dt < now
         except (ValueError, TypeError):
             is_past = False
